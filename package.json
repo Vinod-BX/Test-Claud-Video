@@ -1,0 +1,61 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "My Remotion video",
+  "repository": {},
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@remotion/cli": "4.0.486",
+    "@remotion/zod-types": "4.0.486",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.486",
+    "zod": "4.3.6",
+    "@remotion/tailwind-v4": "4.0.486",
+    "tailwindcss": "4.0.0",
+    "@remotion/player": "4.0.486",
+    "@remotion/transitions": "4.0.486",
+    "@remotion/animation-utils": "4.0.486",
+    "@remotion/paths": "4.0.486",
+    "@remotion/shapes": "4.0.486",
+    "@remotion/media-utils": "4.0.486",
+    "@remotion/noise": "4.0.486",
+    "@remotion/motion-blur": "4.0.486",
+    "@remotion/google-fonts": "4.0.486",
+    "@remotion/fonts": "4.0.486",
+    "@remotion/gif": "4.0.486",
+    "@remotion/lottie": "4.0.486",
+    "@remotion/three": "4.0.486",
+    "@remotion/preload": "4.0.486",
+    "@remotion/layout-utils": "4.0.486",
+    "@remotion/captions": "4.0.486",
+    "@remotion/rive": "4.0.486",
+    "@remotion/effects": "4.0.486",
+    "@remotion/light-leaks": "4.0.486",
+    "@remotion/starburst": "4.0.486",
+    "@remotion/sfx": "4.0.486",
+    "@remotion/animated-emoji": "4.0.486",
+    "@remotion/rounded-text-box": "4.0.486",
+    "three": "^0.180.0",
+    "@react-three/fiber": "^9.4.0",
+    "lottie-web": "^5.13.0"
+  },
+  "devDependencies": {
+    "@remotion/eslint-config-flat": "4.0.486",
+    "@types/react": "19.2.7",
+    "@types/web": "0.0.166",
+    "eslint": "9.19.0",
+    "prettier": "3.8.1",
+    "typescript": "5.9.3"
+  },
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion bundle",
+    "upgrade": "remotion upgrade",
+    "lint": "eslint src && tsc"
+  },
+  "sideEffects": [
+    "*.css"
+  ]
+}
