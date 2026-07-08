@@ -1,47 +1,59 @@
 import "./index.css";
-import { Composition } from "remotion";
-import { HelloWorld, myCompSchema } from "./HelloWorld";
-import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
+import { Composition, Folder } from "remotion";
+import { calculateMetadata, PortableDesignSystem } from "./PortableDesignSystem";
+import { SCRIPT_SCENES, VIDEO_FPS, VIDEO_HEIGHT, VIDEO_WIDTH } from "./design/tokens";
+import { Scene1Opening } from "./scenes/Scene1Opening";
+import { Scene2TheShift } from "./scenes/Scene2TheShift";
+import { Scene3WhatThisEnables } from "./scenes/Scene3WhatThisEnables";
+import { Scene4HowItWorks } from "./scenes/Scene4HowItWorks";
+import { Scene5CrossPlatformGeneration } from "./scenes/Scene5CrossPlatformGeneration";
+import { Scene6WhyThisMatters } from "./scenes/Scene6WhyThisMatters";
+import { Scene7Closing } from "./scenes/Scene7Closing";
 
-// Each <Composition> is an entry in the sidebar!
+const SCENE_COMPONENTS = [
+  Scene1Opening,
+  Scene2TheShift,
+  Scene3WhatThisEnables,
+  Scene4HowItWorks,
+  Scene5CrossPlatformGeneration,
+  Scene6WhyThisMatters,
+  Scene7Closing,
+];
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
       <Composition
-        // You can take the "id" to render a video:
-        // npx remotion render HelloWorld
-        id="HelloWorld"
-        component={HelloWorld}
-        durationInFrames={150}
-        fps={30}
-        width={1920}
-        height={1080}
-        // You can override these props for each render:
-        // https://www.remotion.dev/docs/parametrized-rendering
-        schema={myCompSchema}
-        defaultProps={{
-          titleText: "Welcome to Remotion",
-          titleColor: "#000000",
-          logoColor1: "#91EAE4",
-          logoColor2: "#86A8E7",
-        }}
+        id="PortableDesignSystem"
+        component={PortableDesignSystem}
+        fps={VIDEO_FPS}
+        width={VIDEO_WIDTH}
+        height={VIDEO_HEIGHT}
+        defaultProps={{}}
+        calculateMetadata={calculateMetadata}
       />
 
-      {/* Mount any React component to make it show up in the sidebar and work on it individually! */}
-      <Composition
-        id="OnlyLogo"
-        component={Logo}
-        durationInFrames={150}
-        fps={30}
-        width={1920}
-        height={1080}
-        schema={myCompSchema2}
-        defaultProps={{
-          logoColor1: "#91dAE2" as const,
-          logoColor2: "#86A8E7" as const,
-        }}
-      />
+      {/* Isolated per-scene compositions for scrubbing/QA in Studio — fixed
+          script-timestamp durations, independent of the main composition's
+          calculateMetadata. See rules/art-direction.md verification steps. */}
+      <Folder name="Scenes">
+        {SCRIPT_SCENES.map((scene, index) => {
+          const SceneComponent = SCENE_COMPONENTS[index];
+          const durationInFrames = Math.round(scene.baseDurationInSeconds * VIDEO_FPS);
+          return (
+            <Composition
+              key={scene.id}
+              id={scene.label.replace(/\s+/g, "")}
+              component={SceneComponent}
+              fps={VIDEO_FPS}
+              width={VIDEO_WIDTH}
+              height={VIDEO_HEIGHT}
+              durationInFrames={durationInFrames}
+              defaultProps={{ durationInFrames }}
+            />
+          );
+        })}
+      </Folder>
     </>
   );
 };

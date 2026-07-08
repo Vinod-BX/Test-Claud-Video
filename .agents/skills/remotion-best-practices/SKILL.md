@@ -362,3 +362,7 @@ For complex maps with animated routes or flyovers, load the maps rule: [rules/ma
 ## Voiceover
 
 See [rules/voiceover.md](rules/voiceover.md) for adding AI-generated voiceover to Remotion compositions using ElevenLabs TTS.
+
+## Art direction & style brief
+
+This project has a standing Art Direction brief (canvas/background rules, banned default transitions and stock clichés, editorial type scale, quality bar). Load [rules/art-direction.md](rules/art-direction.md) before designing or coding any scene.
