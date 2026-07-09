@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Animation Pre-Production Studio</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root{
+    --bg:#0b0b0d; --panel:#131316; --panel-2:#1a1a1e; --border:#26262b;
+    --text:#f4f4f5; --muted:#9a9aa2; --accent:#7c5cff; --accent-2:#ff6a3d;
+    --good:#3ddc97; --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;height:100%;}
+  #root{height:100%;}
+  ::selection{background:var(--accent);color:#fff;}
+  .app{display:grid;grid-template-columns:1fr 380px;height:100vh;}
+  @media (max-width:980px){.app{grid-template-columns:1fr;}}
+  .main{overflow-y:auto;padding:56px 64px;position:relative;}
+  .sidebar{background:var(--panel);border-left:1px solid var(--border);padding:32px;overflow-y:auto;display:flex;flex-direction:column;gap:24px;}
+  .progress-wrap{max-width:720px;margin:0 auto 40px auto;}
+  .progress-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .progress-step{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+  .progress-pct{font-size:12px;color:var(--muted);}
+  .progress-track{height:3px;background:var(--panel-2);border-radius:99px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .5s cubic-bezier(.16,1,.3,1);}
+  .content{max-width:720px;margin:0 auto;animation:fadeUp .45s cubic-bezier(.16,1,.3,1);}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:10px;}
+  h1.step-title{font-size:38px;line-height:1.1;margin:0 0 12px 0;font-weight:650;letter-spacing:-.02em;}
+  .step-sub{color:var(--muted);font-size:16px;line-height:1.55;margin:0 0 36px 0;max-width:600px;}
+  .field-group{margin-bottom:26px;}
+  label.field-label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px;}
+  input[type=text], textarea, select{
+    width:100%;background:var(--panel-2);border:1px solid var(--border);color:var(--text);
+    padding:13px 14px;border-radius:10px;font-size:15px;font-family:inherit;outline:none;transition:border-color .2s;
+  }
+  input[type=text]:focus, textarea:focus, select:focus{border-color:var(--accent);}
+  textarea{resize:vertical;min-height:80px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .chip-row{display:flex;flex-wrap:wrap;gap:10px;}
+  .chip{padding:10px 16px;border-radius:99px;border:1px solid var(--border);background:var(--panel-2);color:var(--text);
+    font-size:14px;cursor:pointer;transition:.15s;}
+  .chip:hover{border-color:var(--accent);}
+  .chip.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+  .card-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:600px){.card-grid{grid-template-columns:1fr;}}
+  .ref-card{border:1.5px solid var(--border);background:var(--panel-2);border-radius:14px;padding:20px;cursor:pointer;
+    transition:.18s; position:relative; overflow:hidden;}
+  .ref-card:hover{border-color:#3a3a42;transform:translateY(-2px);}
+  .ref-card.selected{border-color:var(--accent);background:linear-gradient(180deg,rgba(124,92,255,.14),rgba(124,92,255,.03));}
+  .ref-card.selected::after{content:"✓";position:absolute;top:14px;right:14px;width:22px;height:22px;border-radius:50%;
+    background:var(--accent);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .ref-thumb{height:64px;border-radius:10px;margin-bottom:14px;}
+  .ref-name{font-size:16px;font-weight:650;margin-bottom:6px;}
+  .ref-desc{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+  .tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+  .tag{font-size:11px;padding:3px 9px;border-radius:99px;background:rgba(255,255,255,.06);color:var(--muted);}
+  .use-case{font-size:11.5px;color:#7c7c86;font-style:italic;}
+  .reco-box{margin-top:32px;border:1px solid rgba(124,92,255,.35);background:linear-gradient(135deg,rgba(124,92,255,.08),rgba(255,106,61,.05));
+    border-radius:14px;padding:22px 24px;}
+  .reco-label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:10px;}
+  .reco-title{font-size:19px;font-weight:650;margin-bottom:10px;}
+  .reco-why{font-size:13px;color:var(--muted);margin-bottom:10px;}
+  .reco-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+  .reco-badge{font-size:12px;background:rgba(61,220,151,.12);color:var(--good);padding:4px 10px;border-radius:99px;}
+  .reco-points{margin:0;padding-left:18px;color:#c8c8ce;font-size:13.5px;line-height:1.8;}
+  .reco-apply{margin-top:14px;background:var(--accent);color:#fff;border:none;padding:9px 18px;border-radius:9px;
+    font-size:13.5px;font-weight:600;cursor:pointer;}
+  .reco-apply:hover{opacity:.9;}
+  .nav-row{display:flex;justify-content:space-between;margin-top:44px;padding-top:24px;border-top:1px solid var(--border);}
+  button.btn{border:none;padding:13px 26px;border-radius:10px;font-size:14.5px;font-weight:600;cursor:pointer;transition:.15s;}
+  .btn-primary{background:var(--text);color:#0b0b0d;}
+  .btn-primary:hover{opacity:.88;}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+  .btn-ghost:hover{color:var(--text);border-color:#3a3a42;}
+  .btn-primary:disabled{opacity:.35;cursor:not-allowed;}
+  .sidebar h2{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0;font-weight:700;}
+  .bible-item{border-bottom:1px solid var(--border);padding:14px 0;}
+  .bible-item:last-child{border-bottom:none;}
+  .bible-key{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7c7c86;margin-bottom:5px;}
+  .bible-val{font-size:14.5px;font-weight:600;}
+  .bible-val.empty{color:#55555c;font-weight:400;font-style:italic;}
+  .status-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:99px;}
+  .status-locked{background:rgba(61,220,151,.14);color:var(--good);}
+  .status-progress{background:rgba(255,193,61,.14);color:#ffc13d;}
+  .step-dots{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .step-dot{width:26px;height:6px;border-radius:99px;background:var(--panel-2);cursor:pointer;border:1px solid var(--border);}
+  .step-dot.done{background:var(--good);border-color:var(--good);}
+  .step-dot.current{background:var(--accent);border-color:var(--accent);}
+  .explain-box{border:1px solid var(--border);background:var(--panel-2);border-radius:12px;padding:16px 18px;margin-top:8px;font-size:13.5px;color:#c8c8ce;line-height:1.6;}
+  .bible-doc{white-space:pre-wrap;font-family:"SF Mono",Menlo,monospace;font-size:12.5px;line-height:1.7;color:#d4d4d9;
+    background:var(--panel-2);border:1px solid var(--border);border-radius:12px;padding:24px;max-height:60vh;overflow-y:auto;}
+  .final-header{text-align:center;margin-bottom:40px;}
+  .final-header .badge{display:inline-block;background:rgba(61,220,151,.14);color:var(--good);font-size:12px;font-weight:700;
+    padding:6px 14px;border-radius:99px;margin-bottom:16px;letter-spacing:.06em;text-transform:uppercase;}
+  .download-row{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;}
+  .multi-hint{font-size:12px;color:#7c7c86;margin-bottom:14px;}
+  .combo-note{margin-top:18px;font-size:13px;color:var(--muted);}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+
+const { useState, useMemo } = React;
+
+/* ---------------------------------------------------------- DATA ---------------------------------------------------------- */
+
+const STEPS = [
+  "Project", "Creative Direction", "Visual Language", "Motion Language", "Camera",
+  "Animation Principles", "Typography", "Transitions", "Technical Stack", "Architecture", "Animation Bible"
+];
+
+const DIRECTION_CARDS = [
+  { id: "google", name: "Google Material", grad: ["#4285F4","#34A853"], desc: "Smooth, purposeful, minimal — motion that clarifies hierarchy.", tags: ["Smooth","Purposeful","Minimal"], use: "SaaS, product demos, leadership decks" },
+  { id: "apple", name: "Apple", grad: ["#e8e8ed","#a9a9b3"], desc: "Elegant, editorial, premium — restrained motion with heavy craft.", tags: ["Elegant","Editorial","Premium"], use: "Brand films, hardware/product reveals" },
+  { id: "stripe", name: "Stripe", grad: ["#635BFF","#0A2540"], desc: "Abstract, systems-thinking gradients and geometric motion.", tags: ["Abstract","System Thinking"], use: "Fintech, infrastructure, dev tools" },
+  { id: "linear", name: "Linear", grad: ["#5E6AD2","#0A0A0B"], desc: "Fast, technical, high-contrast — motion as precision instrument.", tags: ["Fast","Technical"], use: "Developer tools, technical product demos" },
+  { id: "airbnb", name: "Airbnb", grad: ["#FF5A5F","#FFB400"], desc: "Warm, human, welcoming — motion that builds trust and belonging.", tags: ["Warm","Human","Friendly"], use: "Consumer/marketplace, lifestyle brand stories" },
+  { id: "microsoft", name: "Microsoft", grad: ["#00A4EF","#7FBA00"], desc: "Structured, accessible, enterprise-confident motion systems.", tags: ["Structured","Accessible"], use: "Enterprise, B2B, internal comms" },
+  { id: "pixar", name: "Pixar", grad: ["#FFD23F","#EE4E34"], desc: "Character-driven, squash-and-stretch, emotionally expressive.", tags: ["Character Driven","Expressive"], use: "Story-led explainers, mascot/character work" },
+  { id: "disney", name: "Disney", grad: ["#1B1F3B","#8E44AD"], desc: "Classic 12 principles of animation — anticipation, arcs, appeal.", tags: ["Classic","Storytelling"], use: "Narrative-first brand storytelling" },
+  { id: "editorial", name: "Editorial", grad: ["#111111","#D4D4D4"], desc: "Typography-led, grid-driven, magazine-style pacing.", tags: ["Type-led","Grid"], use: "Thought leadership, reports, long-form" },
+  { id: "cinematic", name: "Cinematic", grad: ["#0D0D0D","#C9A227"], desc: "Film language — depth of field, anamorphic framing, score-led pacing.", tags: ["Film Language","Depth"], use: "Brand anthem films, hero launches" },
+  { id: "custom", name: "Custom / Uploaded", grad: ["#7c5cff","#ff6a3d"], desc: "Bring your own brand or design system — colors, type, tone.", tags: ["Bespoke"], use: "When a brand system already exists" },
+];
+
+const VISUAL_LANGUAGE = {
+  Background: ["White base","Soft gradient mesh","Dot/line grid","Dark canvas","Content-as-background"],
+  Lighting: ["Flat/even","Soft studio","Directional key light","Volumetric/glow"],
+  "Color System": ["Monochrome + 1 accent","Brand palette (2-3 colors)","Full brand system","High-contrast duotone"],
+  Grid: ["12-column editorial","8pt system grid","Freeform/organic","Cinematic 21:9 safe-frame"],
+  Texture: ["None (flat)","Subtle grain","Paper/print texture","Noise/organic"],
+  Shadows: ["None","Soft ambient","Hard directional","Layered elevation"],
+  Blur: ["None","Depth-of-field bokeh","Motion blur on fast moves","Gaussian layering for depth"],
+  Glass: ["None","Frosted glass panels","Glass morphism cards"],
+  Elevation: ["Flat/2D","Subtle z-depth","Strong layered depth (parallax-ready)"],
+  "Illustration Style": ["None (type/UI only)","Geometric/abstract","Line icon system","Custom illustration"],
+  "UI Style": ["Native OS chrome","Custom minimal UI","Isometric/3D UI","No UI (pure motion graphics)"],
+};
+
+const MOTION_LANGUAGE = [
+  { id:"calm", name:"Calm", desc:"Long eases, generous holds, low velocity. Motion never competes with the message." },
+  { id:"organic", name:"Organic", desc:"Physical, spring-based, slightly imperfect — nothing moves on a robotic curve." },
+  { id:"mechanical", name:"Mechanical", desc:"Linear/stepped timing, precise snaps — technical and deliberate." },
+  { id:"responsive", name:"Responsive", desc:"Motion reacts instantly to input/data — snappy, UI-driven easing." },
+  { id:"elegant", name:"Elegant", desc:"Slow reveals, refined easing curves, generous negative space." },
+  { id:"premium", name:"Premium", desc:"Heavy production value — subtle depth, light, and material cues throughout." },
+  { id:"energetic", name:"Energetic", desc:"Fast cuts, punchy overshoot, high perceived tempo." },
+  { id:"playful", name:"Playful", desc:"Bouncy springs, whimsical timing, exaggerated squash/stretch." },
+  { id:"editorial", name:"Editorial", desc:"Type-driven pacing that mirrors reading rhythm — deliberate, structured." },
+];
+
+const CAMERA_LANGUAGE = [
+  { id:"static", name:"Static", desc:"Locked frame. All motion happens within the composition." },
+  { id:"dolly", name:"Dolly", desc:"Slow push in/out along the z-axis for emphasis and depth." },
+  { id:"pan", name:"Pan", desc:"Lateral reveal across a wide scene or sequence of ideas." },
+  { id:"orbit", name:"Orbit", desc:"Camera arcs around a subject — great for hero product moments." },
+  { id:"follow", name:"Follow", desc:"Camera tracks a moving subject/element through the scene." },
+  { id:"zoom", name:"Zoom", desc:"Scale-based push into detail — fast focus shifts." },
+  { id:"parallax", name:"Parallax", desc:"Layered depth via differential scroll/motion speeds." },
+  { id:"perspective", name:"Perspective", desc:"3D-plane tilts and skews for dimensional UI/product reveals." },
+];
+
+const ANIMATION_PRINCIPLES = ["Morph","Scale","Fade","Shared Elements","Mask Reveal","Liquid Motion","Shape Transformation","Material Motion","Physics","Spring"];
+
+const TYPOGRAPHY_STYLES = [
+  { id:"word", name:"Word Reveal", desc:"Words enter as whole units — clean, confident pacing." },
+  { id:"char", name:"Character Reveal", desc:"Letter-by-letter stagger — precise, kinetic-type feel." },
+  { id:"blur", name:"Blur In", desc:"Text resolves from soft focus — cinematic, atmospheric." },
+  { id:"fadeup", name:"Fade Up", desc:"Text fades in while rising slightly — calm and standard-premium." },
+  { id:"mask", name:"Mask", desc:"Text reveals through a moving clip-path/mask — editorial and controlled." },
+  { id:"path", name:"Motion Path", desc:"Text travels along a defined path — expressive, brand-driven." },
+];
+
+const TRANSITIONS = [
+  { id:"shared", name:"Shared Element", desc:"An element persists and morphs identity across scenes (Material-style continuity)." },
+  { id:"morph", name:"Shape Morph", desc:"One shape organically deforms into the next scene's shape." },
+  { id:"matchcut", name:"Camera Match Cut", desc:"Camera move in scene A continues seamlessly into scene B." },
+  { id:"continuity", name:"Object Continuity", desc:"A recognizable object reappears, recontextualized, linking scenes." },
+  { id:"grid", name:"Grid Transformation", desc:"The layout grid itself reorganizes to become the next scene." },
+  { id:"liquid", name:"Liquid", desc:"Fluid, viscous distortion connects two scenes as one continuous fluid." },
+  { id:"zoomthrough", name:"Zoom Through", desc:"Camera zooms through an element into the next scene's world." },
+];
+
+const STACK_OPTIONS = [
+  { id:"remotion", name:"Remotion", desc:"Deterministic React video rendering — frame-accurate, server-renderable." },
+  { id:"gsap", name:"GSAP", desc:"Industry-standard JS animation engine — timelines, easing, scroll triggers." },
+  { id:"motion", name:"Motion (Framer Motion)", desc:"Declarative React animation — layout transitions, gestures, springs." },
+  { id:"reactspring", name:"React Spring", desc:"Physics-based spring animation for React." },
+  { id:"three", name:"Three.js", desc:"3D rendering — for perspective, depth, and dimensional scenes." },
+  { id:"lottie", name:"Lottie", desc:"After Effects vector animation playback." },
+  { id:"svg", name:"SVG", desc:"Vector shapes/paths for morphing and crisp scalable graphics." },
+  { id:"canvas", name:"Canvas", desc:"Pixel-level rendering for particles, generative or high-perf effects." },
+];
+
+const ARCHITECTURE_OPTIONS = ["Scenes","Components","Shared Motion Library","Hooks","Utilities","Constants","Assets","Animation Presets","Theme","Timeline"];
+
+/* ------------------------------------------------------ RECOMMENDATION LOGIC ------------------------------------------------------ */
+
+function recommendDirection(project) {
+  const purpose = (project.purpose || "").toLowerCase();
+  if (purpose.includes("demo") || purpose.includes("saas") || purpose.includes("product")) {
+    return { id: "google", why: ["SaaS / Product-oriented purpose","Needs calm hierarchy & readability","Leadership-safe premium tone"],
+      points: ["Calm motion","Strong hierarchy","Excellent readability","Premium transitions"] };
+  }
+  if (purpose.includes("brand") || purpose.includes("story")) {
+    return { id: "apple", why: ["Brand-story purpose","Emotional, premium tone needed","Editorial pacing suits narrative"],
+      points: ["Elegant restraint","Editorial pacing","Premium material cues","Strong emotional beats"] };
+  }
+  if (purpose.includes("explain")) {
+    return { id: "editorial", why: ["Explainer purpose","Information-dense content","Needs clear reading rhythm"],
+      points: ["Type-led clarity","Structured pacing","Grid-driven hierarchy","Easy to follow"] };
+  }
+  return { id: "google", why: ["General-purpose default","Balances clarity and polish","Safe for mixed audiences"],
+    points: ["Calm motion","Strong hierarchy","Excellent readability","Premium transitions"] };
+}
+
+function recommendMotion(direction) {
+  const map = {
+    google: "calm", apple: "elegant", stripe: "responsive", linear: "responsive",
+    airbnb: "organic", microsoft: "calm", pixar: "playful", disney: "organic",
+    editorial: "editorial", cinematic: "premium", custom: "premium",
+  };
+  return map[direction] || "calm";
+}
+
+function recommendCamera(direction) {
+  const map = { google:"static", apple:"dolly", stripe:"parallax", linear:"zoom", airbnb:"pan",
+    microsoft:"static", pixar:"follow", disney:"orbit", editorial:"static", cinematic:"dolly", custom:"dolly" };
+  return map[direction] || "static";
+}
+
+function recommendStack(purpose) {
+  const p = (purpose||"").toLowerCase();
+  if (p.includes("3d") || p.includes("product") && p.includes("render")) return { ids:["remotion","three"], reason:"3D-dimensional product presence needs a real 3D engine layered into deterministic video rendering." };
+  return { ids:["remotion","motion"], reason: "Perfect for product films. Reusable React components. Excellent sequencing." };
+}
+
+/* ------------------------------------------------------------- UI ATOMS ------------------------------------------------------------- */
+
+function ProgressBar({ stepIndex, total }) {
+  const pct = Math.round(((stepIndex) / (total - 1)) * 100);
+  return (
+    <div className="progress-wrap">
+      <div className="progress-top">
+        <span className="progress-step">Step {stepIndex + 1} of {total} — {STEPS[stepIndex]}</span>
+        <span className="progress-pct">{pct}%</span>
+      </div>
+      <div className="progress-track"><div className="progress-fill" style={{ width: pct + "%" }} /></div>
+    </div>
+  );
+}
+
+function Chip({ label, active, onClick }) {
+  return <button type="button" className={"chip" + (active ? " active" : "")} onClick={onClick}>{label}</button>;
+}
+
+function RefCard({ card, selected, onClick }) {
+  return (
+    <div className={"ref-card" + (selected ? " selected" : "")} onClick={onClick}>
+      <div className="ref-thumb" style={{ background: `linear-gradient(135deg, ${card.grad[0]}, ${card.grad[1]})` }} />
+      <div className="ref-name">{card.name}</div>
+      <div className="ref-desc">{card.desc}</div>
+      <div className="tag-row">{card.tags.map(t => <span className="tag" key={t}>{t}</span>)}</div>
+      <div className="use-case">Best for: {card.use}</div>
+    </div>
+  );
+}
+
+function Recommendation({ label, title, why, points, onApply }) {
+  return (
+    <div className="reco-box">
+      <div className="reco-label">Recommended</div>
+      <div className="reco-title">{title}</div>
+      <div className="reco-badges">{why.map(w => <span className="reco-badge" key={w}>✓ {w}</span>)}</div>
+      <div className="reco-why">This provides</div>
+      <ul className="reco-points">{points.map(p => <li key={p}>{p}</li>)}</ul>
+      {onApply && <button className="reco-apply" onClick={onApply}>Accept recommendation</button>}
+    </div>
+  );
+}
+
+function NavRow({ onBack, onNext, backLabel, nextLabel, nextDisabled }) {
+  return (
+    <div className="nav-row">
+      <button className="btn btn-ghost" onClick={onBack} style={{ visibility: onBack ? "visible" : "hidden" }}>{backLabel || "← Back"}</button>
+      <button className="btn btn-primary" onClick={onNext} disabled={nextDisabled}>{nextLabel || "Continue →"}</button>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------ SIDEBAR ------------------------------------------------------------- */
+
+function labelFor(list, id) { const f = list.find(x => x.id === id); return f ? f.name : null; }
+
+function Sidebar({ state, stepIndex, goTo }) {
+  const dirName = labelFor(DIRECTION_CARDS, state.direction);
+  const motionName = labelFor(MOTION_LANGUAGE, state.motion);
+  const cameraName = labelFor(CAMERA_LANGUAGE, state.camera);
+  const typeName = labelFor(TYPOGRAPHY_STYLES, state.typography);
+  const transName = state.transitions.length ? state.transitions.map(id => labelFor(TRANSITIONS, id)).join(", ") : null;
+  const stackNames = state.stack.length ? state.stack.map(id => labelFor(STACK_OPTIONS, id)).join(" + ") : null;
+
+  const items = [
+    ["Project", state.project.name || null],
+    ["Style", dirName],
+    ["Motion", motionName],
+    ["Camera", cameraName],
+    ["Principles", state.principles.length ? state.principles.join(", ") : null],
+    ["Typography", typeName],
+    ["Transitions", transName],
+    ["Framework", stackNames],
+    ["Architecture", state.architecture.length ? state.architecture.length + " modules" : null],
+  ];
+
+  const lockedCount = items.filter(i => i[1]).length;
+  const isLocked = stepIndex === STEPS.length - 1;
+
+  return (
+    <div className="sidebar">
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        <h2>Animation Bible</h2>
+        <span className={"status-pill " + (isLocked ? "status-locked" : "status-progress")}>
+          {isLocked ? "✓ Locked" : `${lockedCount}/${items.length} set`}
+        </span>
+      </div>
+      <div>
+        {items.map(([k, v]) => (
+          <div className="bible-item" key={k}>
+            <div className="bible-key">{k}</div>
+            <div className={"bible-val" + (v ? "" : " empty")}>{v || "Not yet decided"}</div>
+          </div>
+        ))}
+      </div>
+      <div>
+        <div className="bible-key" style={{ marginBottom: 10 }}>Jump to step</div>
+        <div className="step-dots">
+          {STEPS.map((s, i) => (
+            <div key={s} title={s}
+              className={"step-dot" + (i < stepIndex ? " done" : i === stepIndex ? " current" : "")}
+              onClick={() => goTo(i)} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------- STEPS -------------------------------------------------------------- */
+
+function StepProject({ state, setState }) {
+  const p = state.project;
+  const set = (k, v) => setState(s => ({ ...s, project: { ...s.project, [k]: v } }));
+  return (
+    <div>
+      <div className="eyebrow">Foundations</div>
+      <h1 className="step-title">Let's set up your project.</h1>
+      <p className="step-sub">A few basics so every downstream recommendation — style, motion, stack — fits your actual production.</p>
+
+      <div className="field-group">
+        <label className="field-label">Project name</label>
+        <input type="text" value={p.name} onChange={e => set("name", e.target.value)} placeholder="e.g. Q3 Product Launch Film" />
+      </div>
+      <div className="field-group">
+        <label className="field-label">Purpose</label>
+        <textarea value={p.purpose} onChange={e => set("purpose", e.target.value)}
+          placeholder="e.g. Product demo for a SaaS platform aimed at enterprise buyers" />
+      </div>
+      <div className="row2">
+        <div className="field-group">
+          <label className="field-label">Audience</label>
+          <div className="chip-row">
+            {["Internal","Client","Public","Leadership","Investors"].map(a => (
+              <Chip key={a} label={a} active={p.audience === a} onClick={() => set("audience", a)} />
+            ))}
+          </div>
+        </div>
+        <div className="field-group">
+          <label className="field-label">Aspect / Resolution</label>
+          <div className="chip-row">
+            {["16:9 (1920x1080)","9:16 (1080x1920)","1:1 (1080x1080)"].map(a => (
+              <Chip key={a} label={a} active={p.resolution === a} onClick={() => set("resolution", a)} />
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="row2">
+        <div className="field-group">
+          <label className="field-label">Duration</label>
+          <input type="text" value={p.duration} onChange={e => set("duration", e.target.value)} placeholder="e.g. 45 seconds" />
+        </div>
+        <div className="field-group">
+          <label className="field-label">FPS</label>
+          <div className="chip-row">
+            {["24","30","60"].map(f => (
+              <Chip key={f} label={f} active={p.fps === f} onClick={() => set("fps", f)} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StepDirection({ state, setState }) {
+  const reco = useMemo(() => recommendDirection(state.project), [state.project.purpose]);
+  const recoCard = DIRECTION_CARDS.find(c => c.id === reco.id);
+  return (
+    <div>
+      <div className="eyebrow">Step 2</div>
+      <h1 className="step-title">Choose your creative direction.</h1>
+      <p className="step-sub">This anchors every decision after this — visual language, motion feel, transitions all inherit from here.</p>
+      <div className="card-grid">
+        {DIRECTION_CARDS.map(c => (
+          <RefCard key={c.id} card={c} selected={state.direction === c.id}
+            onClick={() => setState(s => ({ ...s, direction: c.id }))} />
+        ))}
+      </div>
+      {!state.direction && (
+        <Recommendation label="Recommended" title={recoCard.name} why={reco.why} points={reco.points}
+          onApply={() => setState(s => ({ ...s, direction: reco.id }))} />
+      )}
+    </div>
+  );
+}
+
+function StepVisualLanguage({ state, setState }) {
+  const vl = state.visualLanguage;
+  const set = (k, v) => setState(s => ({ ...s, visualLanguage: { ...s.visualLanguage, [k]: v } }));
+  return (
+    <div>
+      <div className="eyebrow">Step 3</div>
+      <h1 className="step-title">Define the visual language.</h1>
+      <p className="step-sub">Per the standing brief: white base by default unless a brand system's native dark/gradient identity should govern instead — confirm below.</p>
+      {Object.entries(VISUAL_LANGUAGE).map(([category, options]) => (
+        <div className="field-group" key={category}>
+          <label className="field-label">{category}</label>
+          <div className="chip-row">
+            {options.map(o => <Chip key={o} label={o} active={vl[category] === o} onClick={() => set(category, o)} />)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StepMotion({ state, setState }) {
+  const reco = useMemo(() => recommendMotion(state.direction), [state.direction]);
+  const recoDef = MOTION_LANGUAGE.find(m => m.id === reco);
+  return (
+    <div>
+      <div className="eyebrow">Step 4</div>
+      <h1 className="step-title">Set the motion language.</h1>
+      <p className="step-sub">The emotional register of every ease, hold, and velocity curve in the piece.</p>
+      <div className="card-grid">
+        {MOTION_LANGUAGE.map(m => (
+          <div key={m.id} className={"ref-card" + (state.motion === m.id ? " selected" : "")}
+            onClick={() => setState(s => ({ ...s, motion: m.id }))}>
+            <div className="ref-name">{m.name}</div>
+            <div className="ref-desc">{m.desc}</div>
+          </div>
+        ))}
+      </div>
+      {!state.motion && recoDef && (
+        <Recommendation label="Recommended" title={recoDef.name}
+          why={["Matches your chosen creative direction","Consistent emotional register","Proven pairing"]}
+          points={[recoDef.desc]}
+          onApply={() => setState(s => ({ ...s, motion: reco }))} />
+      )}
+    </div>
+  );
+}
+
+function StepCamera({ state, setState }) {
+  const reco = useMemo(() => recommendCamera(state.direction), [state.direction]);
+  const recoDef = CAMERA_LANGUAGE.find(c => c.id === reco);
+  return (
+    <div>
+      <div className="eyebrow">Step 5</div>
+      <h1 className="step-title">Choose the camera language.</h1>
+      <p className="step-sub">How the "lens" moves through the composition — even in 2D, this sets a language for depth.</p>
+      <div className="card-grid">
+        {CAMERA_LANGUAGE.map(c => (
+          <div key={c.id} className={"ref-card" + (state.camera === c.id ? " selected" : "")}
+            onClick={() => setState(s => ({ ...s, camera: c.id }))}>
+            <div className="ref-name">{c.name}</div>
+            <div className="ref-desc">{c.desc}</div>
+          </div>
+        ))}
+      </div>
+      {!state.camera && recoDef && (
+        <Recommendation label="Recommended" title={recoDef.name}
+          why={["Pairs with your creative direction","Supports the chosen motion feel"]}
+          points={[recoDef.desc]}
+          onApply={() => setState(s => ({ ...s, camera: reco }))} />
+      )}
+    </div>
+  );
+}
+
+function StepPrinciples({ state, setState }) {
+  const toggle = (id) => setState(s => ({
+    ...s, principles: s.principles.includes(id) ? s.principles.filter(p => p !== id) : [...s.principles, id],
+  }));
+  return (
+    <div>
+      <div className="eyebrow">Step 6</div>
+      <h1 className="step-title">Select animation principles.</h1>
+      <p className="step-sub">The core techniques used to move elements between states. Select as many as apply — these become reusable presets.</p>
+      <div className="chip-row">
+        {ANIMATION_PRINCIPLES.map(p => (
+          <Chip key={p} label={p} active={state.principles.includes(p)} onClick={() => toggle(p)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StepTypography({ state, setState }) {
+  return (
+    <div>
+      <div className="eyebrow">Step 7</div>
+      <h1 className="step-title">How should text animate?</h1>
+      <p className="step-sub">Typography leads the editorial feel per the brief — pick the reveal style for headlines and body copy.</p>
+      <div className="card-grid">
+        {TYPOGRAPHY_STYLES.map(t => (
+          <div key={t.id} className={"ref-card" + (state.typography === t.id ? " selected" : "")}
+            onClick={() => setState(s => ({ ...s, typography: t.id }))}>
+            <div className="ref-name">{t.name}</div>
+            <div className="ref-desc">{t.desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StepTransitions({ state, setState }) {
+  const toggle = (id) => setState(s => ({
+    ...s, transitions: s.transitions.includes(id) ? s.transitions.filter(t => t !== id) : [...s.transitions, id],
+  }));
+  return (
+    <div>
+      <div className="eyebrow">Step 8</div>
+      <h1 className="step-title">Choose scene transitions.</h1>
+      <p className="step-sub">Per the brief: no bare fade/slide/wipe presets. These become custom, content-tied TransitionPresentations.</p>
+      <div className="card-grid">
+        {TRANSITIONS.map(t => (
+          <div key={t.id} className={"ref-card" + (state.transitions.includes(t.id) ? " selected" : "")}
+            onClick={() => toggle(t.id)}>
+            <div className="ref-name">{t.name}</div>
+            <div className="ref-desc">{t.desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StepStack({ state, setState }) {
+  const reco = useMemo(() => recommendStack(state.project.purpose), [state.project.purpose]);
+  const toggle = (id) => setState(s => ({
+    ...s, stack: s.stack.includes(id) ? s.stack.filter(x => x !== id) : [...s.stack, id],
+  }));
+  return (
+    <div>
+      <div className="eyebrow">Step 9</div>
+      <h1 className="step-title">Pick the technical stack.</h1>
+      <p className="step-sub multi-hint">Multiple selections allowed — most productions combine 2-3 tools.</p>
+      <div className="card-grid">
+        {STACK_OPTIONS.map(t => (
+          <div key={t.id} className={"ref-card" + (state.stack.includes(t.id) ? " selected" : "")}
+            onClick={() => toggle(t.id)}>
+            <div className="ref-name">{t.name}</div>
+            <div className="ref-desc">{t.desc}</div>
+          </div>
+        ))}
+      </div>
+      {state.stack.length === 0 && (
+        <Recommendation label="Recommended" title={reco.ids.map(id => labelFor(STACK_OPTIONS, id)).join(" + ")}
+          why={["Deterministic, server-renderable output","Reusable React components","Excellent sequencing control"]}
+          points={[reco.reason]}
+          onApply={() => setState(s => ({ ...s, stack: reco.ids }))} />
+      )}
+    </div>
+  );
+}
+
+function StepArchitecture({ state, setState }) {
+  const toggle = (id) => setState(s => ({
+    ...s, architecture: s.architecture.includes(id) ? s.architecture.filter(x => x !== id) : [...s.architecture, id],
+  }));
+  return (
+    <div>
+      <div className="eyebrow">Step 10</div>
+      <h1 className="step-title">Organize the code architecture.</h1>
+      <p className="step-sub">Select the modules this project's React/Remotion codebase will be structured around.</p>
+      <div className="chip-row">
+        {ARCHITECTURE_OPTIONS.map(a => (
+          <Chip key={a} label={a} active={state.architecture.includes(a)} onClick={() => toggle(a)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* --------------------------------------------------------- BIBLE GENERATION --------------------------------------------------------- */
+
+function generateBibleMarkdown(state) {
+  const dir = DIRECTION_CARDS.find(c => c.id === state.direction);
+  const motion = MOTION_LANGUAGE.find(m => m.id === state.motion);
+  const camera = CAMERA_LANGUAGE.find(c => c.id === state.camera);
+  const typo = TYPOGRAPHY_STYLES.find(t => t.id === state.typography);
+  const transitions = state.transitions.map(id => TRANSITIONS.find(t => t.id === id));
+  const stack = state.stack.map(id => STACK_OPTIONS.find(t => t.id === id));
+  const vl = state.visualLanguage;
+
+  return `# Animation Bible — ${state.project.name || "Untitled Project"}
+
+_Generated by the Animation Pre-Production Studio. This document is immutable unless explicitly edited. Every future scene must reference it._
+
+## Project
+- Purpose: ${state.project.purpose || "—"}
+- Audience: ${state.project.audience || "—"}
+- Duration: ${state.project.duration || "—"}
+- Resolution: ${state.project.resolution || "—"}
+- FPS: ${state.project.fps || "—"}
+
+## Creative Direction
+- Reference system: **${dir ? dir.name : "—"}**
+- ${dir ? dir.desc : ""}
+
+## Visual Language / Color / Lighting / Shadow / Blur / Depth Rules
+${Object.entries(vl).map(([k, v]) => `- ${k}: ${v || "—"}`).join("\n")}
+
+## Motion Language
+- **${motion ? motion.name : "—"}** — ${motion ? motion.desc : ""}
+
+## Camera Rules
+- **${camera ? camera.name : "—"}** — ${camera ? camera.desc : ""}
+
+## Animation Principles
+${state.principles.length ? state.principles.map(p => `- ${p}`).join("\n") : "- —"}
+
+## Typography Rules
+- **${typo ? typo.name : "—"}** — ${typo ? typo.desc : ""}
+
+## Transition Rules
+${transitions.length ? transitions.map(t => `- **${t.name}** — ${t.desc}`).join("\n") : "- —"}
+_Note: no bare fade()/slide()/wipe() presets — every transition above must be authored as a custom TransitionPresentation tied to scene content._
+
+## Technical Stack
+${stack.length ? stack.map(s => `- ${s.name} — ${s.desc}`).join("\n") : "- —"}
+
+## React Architecture / Folder Structure
+${state.architecture.length ? state.architecture.map(a => `- /src/${a.toLowerCase().replace(/\s+/g, "-")}`).join("\n") : "- —"}
+
+## Naming Convention
+- Scenes: \`SceneN<Name>.tsx\` (PascalCase, numbered in sequence order)
+- Shared components: \`PascalCase.tsx\` under \`/src/scenes/shared\`
+- Motion presets: \`camelCase\` exported constants/functions under \`/src/design\` or \`/src/transitions\`
+
+## Motion & Animation Presets
+- Easing, spring configs, and reveal timings must be centralized as shared presets — never hand-rolled per scene.
+- Transitions listed above become reusable \`TransitionPresentation\`s in \`/src/transitions/presentations\`.
+
+## Performance Rules
+- Prefer \`interpolate\`/\`spring\` driven by \`useCurrentFrame()\` — no wall-clock timers.
+- Preload heavy assets (fonts, video, lottie) before render.
+- Keep offscreen/parallax layers GPU-cheap (transform/opacity only where possible).
+
+## Code Standards
+- Strict TypeScript, no \`any\`.
+- One scene = one file; shared motion logic extracted to \`/src/design\` or hooks.
+- All colors/typography sourced from design tokens — never hardcoded per scene.
+
+## Asset Pipeline
+- Static assets in \`/public\`, referenced via \`staticFile()\`.
+- Fonts loaded via \`@remotion/google-fonts\` or self-hosted with \`@remotion/fonts\`.
+
+---
+Status: **✓ Locked** — reference this document for all future scenes. Do not introduce new motion styles unless this Bible changes.
+`;
+}
+
+function StepBible({ state }) {
+  const md = useMemo(() => generateBibleMarkdown(state), [state]);
+  const download = () => {
+    const blob = new Blob([md], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = (state.project.name || "animation-bible").replace(/\s+/g, "-").toLowerCase() + ".md";
+    a.click(); URL.revokeObjectURL(url);
+  };
+  return (
+    <div>
+      <div className="final-header">
+        <div className="badge">✓ Animation Bible Locked</div>
+        <h1 className="step-title" style={{ textAlign: "center" }}>Your production is ready.</h1>
+        <p className="step-sub" style={{ margin: "0 auto" }}>
+          This document governs every scene from here forward. Upload a storyboard next to begin production —
+          each shot will be broken into beats, explained, and built to match this Bible exactly.
+        </p>
+      </div>
+      <div className="bible-doc">{md}</div>
+      <div className="download-row">
+        <button className="btn btn-primary" onClick={download}>Download Animation Bible (.md)</button>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------- APP ROOT ------------------------------------------------------------- */
+
+const initialState = {
+  project: { name: "", purpose: "", audience: "", duration: "", resolution: "", fps: "" },
+  direction: null,
+  visualLanguage: {},
+  motion: null,
+  camera: null,
+  principles: [],
+  typography: null,
+  transitions: [],
+  stack: [],
+  architecture: [],
+};
+
+function requiredFilled(stepIndex, state) {
+  switch (stepIndex) {
+    case 0: return !!(state.project.name && state.project.purpose);
+    case 1: return !!state.direction;
+    case 3: return !!state.motion;
+    case 4: return !!state.camera;
+    case 6: return !!state.typography;
+    default: return true;
+  }
+}
+
+function App() {
+  const [stepIndex, setStepIndex] = useState(0);
+  const [state, setState] = useState(initialState);
+
+  const goTo = (i) => setStepIndex(Math.max(0, Math.min(STEPS.length - 1, i)));
+
+  const stepComponents = [
+    <StepProject state={state} setState={setState} />,
+    <StepDirection state={state} setState={setState} />,
+    <StepVisualLanguage state={state} setState={setState} />,
+    <StepMotion state={state} setState={setState} />,
+    <StepCamera state={state} setState={setState} />,
+    <StepPrinciples state={state} setState={setState} />,
+    <StepTypography state={state} setState={setState} />,
+    <StepTransitions state={state} setState={setState} />,
+    <StepStack state={state} setState={setState} />,
+    <StepArchitecture state={state} setState={setState} />,
+    <StepBible state={state} />,
+  ];
+
+  const isLast = stepIndex === STEPS.length - 1;
+
+  return (
+    <div className="app">
+      <div className="main">
+        <ProgressBar stepIndex={stepIndex} total={STEPS.length} />
+        <div className="content" key={stepIndex}>
+          {stepComponents[stepIndex]}
+          {!isLast && (
+            <NavRow
+              onBack={stepIndex > 0 ? () => goTo(stepIndex - 1) : null}
+              onNext={() => goTo(stepIndex + 1)}
+              nextDisabled={!requiredFilled(stepIndex, state)}
+              nextLabel={stepIndex === STEPS.length - 2 ? "Generate Animation Bible →" : "Continue →"}
+            />
+          )}
+          {isLast && (
+            <NavRow onBack={() => goTo(stepIndex - 1)} onNext={() => goTo(0)}
+              nextLabel="Start a new project" backLabel="← Edit a decision" />
+          )}
+        </div>
+      </div>
+      <Sidebar state={state} stepIndex={stepIndex} goTo={goTo} />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
