@@ -27,7 +27,6 @@ export const GsapStaggeredReveal: React.FC<{ labels: string[] }> = ({
       });
     }, container);
     return { timeline: tl, ctx: context };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useLayoutEffect(() => {

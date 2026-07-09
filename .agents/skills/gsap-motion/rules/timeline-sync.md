@@ -30,7 +30,6 @@ export const StaggeredReveal: React.FC<{ labels: string[] }> = ({ labels }) => {
       });
     }, container);
     return { timeline: tl, ctx };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useLayoutEffect(() => {

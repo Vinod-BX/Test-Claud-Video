@@ -37,6 +37,7 @@
     "@remotion/sfx": "4.0.486",
     "@remotion/animated-emoji": "4.0.486",
     "@remotion/rounded-text-box": "4.0.486",
+    "framer-motion": "^12.42.2",
     "gsap": "^3.15.0",
     "three": "^0.180.0",
     "@react-three/fiber": "^9.4.0",
